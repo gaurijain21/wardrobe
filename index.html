@@ -1,149 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Closet Couture Catwalk</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <custom-navbar></custom-navbar>
-        <div class="text-right mb-2">
-            <a href="login.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Log In
-            </a>
-        </div>
-    <main class="container mx-auto px-4 py-8">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Your Personal Wardrobe Organizer</h1>
-            <p class="text-xl text-gray-600">Capture, categorize, and curate your perfect outfits</p>
-        </div>
+// firebase.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, query, where, orderBy, limit,
+  getDocs, serverTimestamp, doc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Add New Outfit Card -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-gray-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="plus" class="text-gray-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Add New Outfit</h3>
-                        <p class="text-gray-600 mb-4">Upload a photo of your outfit and categorize it</p>
-                        <a href="upload.html" class="inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                            Get Started
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- Category Cards -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-pink-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="star" class="text-pink-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Party Outfits</h3>
-                        <p class="text-gray-600 mb-4">Your collection of party and evening wear</p>
-                        <a href="category.html?type=party" class="inline-block px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors">
-                            View Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBuIUjnescqb-Ta0t1qHMMlyjAdHF_GTdI",
+  authDomain: "wardrobe-cd609.firebaseapp.com",
+  projectId: "wardrobe-cd609",
+  storageBucket: "wardrobe-cd609.firebasestorage.app",
+  messagingSenderId: "864099900869",
+  appId: "1:864099900869:web:2fbc97380b8f041ac7ffac",
+  measurementId: "G-NN603WJVY4"
+};
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-purple-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="heart" class="text-purple-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Ethnic Outfits</h3>
-                        <p class="text-gray-600 mb-4">Traditional and cultural attire collection</p>
-                        <a href="category.html?type=ethnic" class="inline-block px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-                            View Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-blue-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="shirt" class="text-blue-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Casual Outfits</h3>
-                        <p class="text-gray-600 mb-4">Everyday comfortable wear</p>
-                        <a href="category.html?type=casual" class="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                            View Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
+// Configure auth settings
+auth.useDeviceLanguage();
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-gray-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="briefcase" class="text-gray-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Formal Outfits</h3>
-                        <p class="text-gray-600 mb-4">Professional and business attire</p>
-                        <a href="category.html?type=formal" class="inline-block px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                            View Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
+// Auth functions
+export function onUser(callback) {
+  return onAuthStateChanged(auth, (user) => {
+    console.log("Auth state changed:", user ? `${user.email} (${user.uid})` : "null");
+    callback(user);
+  });
+}
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105">
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="mx-auto bg-green-100 rounded-full p-4 w-24 h-24 flex items-center justify-center mb-4">
-                            <i data-feather="activity" class="text-green-500 w-12 h-12"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Gym Outfits</h3>
-                        <p class="text-gray-600 mb-4">Workout and athletic wear</p>
-                        <a href="category.html?type=gym" class="inline-block px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                            View Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
-</div>
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  // Add scopes for better user info
+  provider.addScope('profile');
+  provider.addScope('email');
+  
+  // Set custom parameters
+  provider.setCustomParameters({
+    prompt: 'select_account' // Always show account selection
+  });
+  
+  try {
+    console.log("Initiating Google sign-in redirect...");
+    await signInWithRedirect(auth, provider);
+    // The page will redirect to Google, so code after this won't execute
+  } catch (error) {
+    console.error("Sign in error:", error);
+    throw error;
+  }
+}
 
-        <!-- Recent Outfits Section -->
-        <section class="mt-16">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Recently Added</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- Placeholder for recent outfits -->
-                <div class="bg-gray-200 rounded-lg aspect-square"></div>
-                <div class="bg-gray-200 rounded-lg aspect-square"></div>
-                <div class="bg-gray-200 rounded-lg aspect-square"></div>
-                <div class="bg-gray-200 rounded-lg aspect-square"></div>
-            </div>
-        </section>
-    </main>
+export async function signOutUser() {
+  try {
+    console.log("Signing out user...");
+    await signOut(auth);
+    console.log("✅ Sign out successful");
+  } catch (error) {
+    console.error("Sign out error:", error);
+    throw error;
+  }
+}
 
-    <custom-footer></custom-footer>
+// Create outfit function
+export async function createOutfit({ userId, file, category, notes, colors }) {
+  try {
+    console.log("Creating outfit for user:", userId);
+    
+    // 1. Upload image to Storage
+    const timestamp = Date.now();
+    const filename = `outfits/${userId}/${timestamp}_${file.name}`;
+    const storageRef = ref(storage, filename);
+    
+    console.log("Uploading image to:", filename);
+    await uploadBytes(storageRef, file);
+    const imageUrl = await getDownloadURL(storageRef);
+    console.log("Image uploaded, URL:", imageUrl);
+    
+    // 2. Save outfit data to Firestore
+    const outfitData = {
+      userId,
+      category,
+      notes: notes || "",
+      colors: colors || [],
+      imageUrl,
+      createdAt: serverTimestamp()
+    };
+    
+    console.log("Saving outfit data to Firestore...");
+    const docRef = await addDoc(collection(db, "outfits"), outfitData);
+    console.log("✅ Outfit created with ID:", docRef.id);
+    
+    return { id: docRef.id, ...outfitData };
+  } catch (error) {
+    console.error("Error creating outfit:", error);
+    throw error;
+  }
+}
 
-    <script type="module" src="./firebase.js"></script>
-<!-- page-specific -->
-    <script type="module" src="./script.js"></script>
-    <script type="module" src="./upload.js"></script>
-    <script type="module" src="./category.js"></script>
-    <script type="module" src="./firebase.js"></script>
-    <script type="module" src="./auth-state.js"></script>
+// Get outfits by category
+export async function getOutfitsByCategory(userId, category) {
+  try {
+    console.log(`Getting ${category} outfits for user:`, userId);
+    
+    const q = query(
+      collection(db, "outfits"),
+      where("userId", "==", userId),
+      where("category", "==", category),
+      orderBy("createdAt", "desc")
+    );
+    
+    const snapshot = await getDocs(q);
+    const outfits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`Found ${outfits.length} ${category} outfits`);
+    
+    return outfits;
+  } catch (error) {
+    console.error("Error getting outfits:", error);
+    throw error;
+  }
+}
 
+// Get recent outfits
+export async function getRecentOutfits(userId, limitCount = 8) {
+  try {
+    console.log(`Getting ${limitCount} recent outfits for user:`, userId);
+    
+    const q = query(
+      collection(db, "outfits"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+      limit(limitCount)
+    );
+    
+    const snapshot = await getDocs(q);
+    const outfits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`Found ${outfits.length} recent outfits`);
+    
+    return outfits;
+  } catch (error) {
+    console.error("Error getting recent outfits:", error);
+    throw error;
+  }
+}
 
-
-    <script src="components/navbar.js"></script>
-    <script src="components/footer.js"></script>
-    <!-- <script src="script.js"></script> -->
-    <script>feather.replace();</script>
-<script src="https://huggingface.co/deepsite/deepsite-badge.js"></script>
-</body>
-</html>
+export { auth, db, storage };

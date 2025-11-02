@@ -28,27 +28,32 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Check for redirect result when page loads
-getRedirectResult(auth)
-  .then((result) => {
-    if (result?.user) {
-      console.log("Sign-in successful after redirect:", result.user.email);
-    }
-  })
-  .catch((error) => {
-    console.error("Redirect sign-in error:", error);
-  });
+// Configure auth settings
+auth.useDeviceLanguage();
 
 // Auth functions
 export function onUser(callback) {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, (user) => {
+    console.log("Auth state changed:", user ? `${user.email} (${user.uid})` : "null");
+    callback(user);
+  });
 }
 
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
+  // Add scopes for better user info
+  provider.addScope('profile');
+  provider.addScope('email');
+  
+  // Set custom parameters
+  provider.setCustomParameters({
+    prompt: 'select_account' // Always show account selection
+  });
+  
   try {
-    // Use redirect instead of popup - more reliable
+    console.log("Initiating Google sign-in redirect...");
     await signInWithRedirect(auth, provider);
+    // The page will redirect to Google, so code after this won't execute
   } catch (error) {
     console.error("Sign in error:", error);
     throw error;
@@ -57,7 +62,9 @@ export async function signInWithGoogle() {
 
 export async function signOutUser() {
   try {
+    console.log("Signing out user...");
     await signOut(auth);
+    console.log("✅ Sign out successful");
   } catch (error) {
     console.error("Sign out error:", error);
     throw error;
@@ -67,13 +74,17 @@ export async function signOutUser() {
 // Create outfit function
 export async function createOutfit({ userId, file, category, notes, colors }) {
   try {
+    console.log("Creating outfit for user:", userId);
+    
     // 1. Upload image to Storage
     const timestamp = Date.now();
     const filename = `outfits/${userId}/${timestamp}_${file.name}`;
     const storageRef = ref(storage, filename);
     
+    console.log("Uploading image to:", filename);
     await uploadBytes(storageRef, file);
     const imageUrl = await getDownloadURL(storageRef);
+    console.log("Image uploaded, URL:", imageUrl);
     
     // 2. Save outfit data to Firestore
     const outfitData = {
@@ -85,7 +96,9 @@ export async function createOutfit({ userId, file, category, notes, colors }) {
       createdAt: serverTimestamp()
     };
     
+    console.log("Saving outfit data to Firestore...");
     const docRef = await addDoc(collection(db, "outfits"), outfitData);
+    console.log("✅ Outfit created with ID:", docRef.id);
     
     return { id: docRef.id, ...outfitData };
   } catch (error) {
@@ -97,6 +110,8 @@ export async function createOutfit({ userId, file, category, notes, colors }) {
 // Get outfits by category
 export async function getOutfitsByCategory(userId, category) {
   try {
+    console.log(`Getting ${category} outfits for user:`, userId);
+    
     const q = query(
       collection(db, "outfits"),
       where("userId", "==", userId),
@@ -105,7 +120,10 @@ export async function getOutfitsByCategory(userId, category) {
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const outfits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`Found ${outfits.length} ${category} outfits`);
+    
+    return outfits;
   } catch (error) {
     console.error("Error getting outfits:", error);
     throw error;
@@ -115,6 +133,8 @@ export async function getOutfitsByCategory(userId, category) {
 // Get recent outfits
 export async function getRecentOutfits(userId, limitCount = 8) {
   try {
+    console.log(`Getting ${limitCount} recent outfits for user:`, userId);
+    
     const q = query(
       collection(db, "outfits"),
       where("userId", "==", userId),
@@ -123,7 +143,10 @@ export async function getRecentOutfits(userId, limitCount = 8) {
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const outfits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`Found ${outfits.length} recent outfits`);
+    
+    return outfits;
   } catch (error) {
     console.error("Error getting recent outfits:", error);
     throw error;
