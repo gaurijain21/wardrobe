@@ -4,42 +4,69 @@ import { getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/fi
 
 // Track current user globally
 window.currentAppUser = null;
+let authInitialized = false;
 
 // Check for redirect result when page loads
 async function checkRedirectResult() {
   try {
-    console.log("Checking for redirect result...");
+    console.log("🔍 Checking for redirect result...");
     const result = await getRedirectResult(auth);
     if (result && result.user) {
       console.log("✅ Sign-in successful via redirect:", result.user.email);
-      // The onUser listener will handle the UI update
+      window.currentAppUser = result.user;
       return true;
+    } else {
+      console.log("ℹ️ No redirect result (user may already be signed in or this is a normal page load)");
     }
   } catch (error) {
     console.error("❌ Redirect error:", error);
-    alert("Sign-in failed: " + error.message);
+    const userInfo = document.getElementById('user-info');
+    if (userInfo) {
+      userInfo.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <i data-feather="alert-circle" class="w-4 h-4 text-red-400"></i>
+          <span class="text-red-600 text-sm">Sign-in failed: ${error.message}</span>
+        </div>
+      `;
+      if (window.feather) feather.replace();
+    }
   }
   return false;
 }
 
 // Initialize auth state listener
-onUser((user) => {
-  window.currentAppUser = user;
-  console.log("Global auth state:", user ? user.email : "Not signed in");
+function initializeAuthListener() {
+  console.log("🎯 Setting up auth state listener...");
   
-  // Update UI elements that show user info
-  updateAuthUI(user);
-});
+  onUser((user) => {
+    window.currentAppUser = user;
+    authInitialized = true;
+    
+    if (user) {
+      console.log("✅ User authenticated:", user.email, "UID:", user.uid);
+    } else {
+      console.log("❌ No user authenticated");
+    }
+    
+    // Update UI elements that show user info
+    updateAuthUI(user);
+  });
+}
 
 function updateAuthUI(user) {
   // Get UI elements
   const userInfo = document.getElementById('user-info');
   const authButtons = document.getElementById('auth-buttons');
   
-  if (!authButtons) return; // Not on a page with auth UI
+  if (!authButtons) {
+    console.log("⚠️ Auth buttons container not found on this page");
+    return;
+  }
   
   if (user) {
     // User is signed in
+    console.log("🎨 Updating UI for signed-in user:", user.email);
+    
     if (userInfo) {
       userInfo.innerHTML = `
         <div class="flex items-center space-x-2">
@@ -68,6 +95,8 @@ function updateAuthUI(user) {
     }
   } else {
     // User is signed out
+    console.log("🎨 Updating UI for signed-out state");
+    
     if (userInfo) {
       userInfo.innerHTML = `
         <div class="flex items-center space-x-2">
@@ -116,11 +145,11 @@ async function handleSignIn() {
       Signing in...
     `;
     
-    console.log("Initiating Google sign-in...");
+    console.log("🚀 Initiating Google sign-in...");
     await signInWithGoogle();
     // The page will redirect to Google, so we won't reach here
   } catch (error) {
-    console.error("Sign-in error:", error);
+    console.error("❌ Sign-in error:", error);
     alert("Failed to sign in: " + error.message);
     signinBtn.disabled = false;
     updateAuthUI(null); // Reset the button
@@ -129,7 +158,9 @@ async function handleSignIn() {
 
 async function handleSignOut() {
   try {
+    console.log("👋 Signing out...");
     await firebaseSignOut();
+    
     // Show brief success message
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
@@ -146,12 +177,20 @@ async function handleSignOut() {
       }, 2000);
     }
   } catch (error) {
-    console.error("Sign out error:", error);
+    console.error("❌ Sign out error:", error);
     alert("Failed to sign out. Please try again.");
   }
 }
 
-// Check for redirect result on page load
-checkRedirectResult();
+// Initialize everything
+(async () => {
+  console.log("🔥 Auth state module loaded");
+  
+  // First check for redirect result
+  await checkRedirectResult();
+  
+  // Then set up the auth listener
+  initializeAuthListener();
+})();
 
 export { updateAuthUI };
